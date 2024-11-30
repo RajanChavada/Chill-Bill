@@ -123,8 +123,8 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
           ))}
         </div>
       </div>
-
-      {/* Customize Button */}
+      {/*
+      
       <motion.div
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -149,7 +149,7 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
           </DialogContent>
         </Dialog>
       </motion.div>
-
+      */}
       {/* Achievements */}
       <motion.div 
         className="w-full max-w-md"
