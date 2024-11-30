@@ -127,7 +127,7 @@ function Dashboard() {
       <div className="flex flex-col items-center justify-center gap-6 py-8">
         <AvatarDisplay />
         <div className="w-[400px]">
-          <MoodTracker />
+          {/*<MoodTracker /> */}
         </div>
       </div>
 

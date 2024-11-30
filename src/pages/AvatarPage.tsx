@@ -1,5 +1,5 @@
 import AvatarDisplay from "@/components/financial-wellness/AvatarDisplay";
-import MoodTracker from "@/components/financial-wellness/MoodTracker";
+/*import MoodTracker from "@/components/financial-wellness/MoodTracker";*/
 import { Card } from "@/components/ui/card";
 
 function AvatarPage() {
@@ -19,7 +19,6 @@ function AvatarPage() {
         <div className="space-y-8">
           <Card className="p-8 bg-white shadow-sm">
             <h2 className="text-lg font-semibold mb-6">Mood Tracking</h2>
-            <MoodTracker />
           </Card>
         </div>
       </div>

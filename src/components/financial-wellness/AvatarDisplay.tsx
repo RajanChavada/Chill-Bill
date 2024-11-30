@@ -5,6 +5,7 @@ import { Sparkles, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Lottie from "lottie-react";
 import AvatarCustomization from "./avatar/AvatarCustomization";
+import MoodTracker from "./MoodTracker";
 
 interface AvatarDisplayProps {
   level?: number;
@@ -55,6 +56,8 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center gap-6">
+      <MoodTracker />
+      <h1 className="text-2xl">How are you feeling?</h1>
       {/* Simplified Avatar Display */}
       <div className="w-48 h-48 rounded-full flex items-center justify-center shadow-lg overflow-hidden bg-background">
         <AnimatePresence mode="wait">
