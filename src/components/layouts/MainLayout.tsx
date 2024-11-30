@@ -71,12 +71,14 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+
         <main className="p-8">
           <div ref={dashboardRef}>{/* Dashboard Section */}</div>
           <div ref={calendarRef}>{/* Calendar Section */}</div>
           <div ref={discussionBoardRef}>{/* Discussion Board Section */}</div>
           {children}
         </main>
+
       </div>
     </>
   );
