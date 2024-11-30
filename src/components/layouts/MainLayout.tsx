@@ -27,6 +27,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-8 shadow-md">
           <h1 className="text-xl font-semibold text-primary">
             Chill-Bill
+
           </h1>
 
           <nav className="flex space-x-4">

@@ -19,12 +19,14 @@ import {
   loadDailyData,
   saveDailyData,
 } from "@/lib/store";
+import { useEffect } from "react";
 
 interface DailyData {
   spending: number;
   mood: '😊' | '🙂' | '😐' | '😕' | '😫';
   anxietyLevel: number;
 }
+
 
 const moodOptions = [
   { emoji: '😊', label: 'Very Calm', anxietyLevel: 1 },

@@ -5,6 +5,7 @@ import { Sparkles, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Lottie from "lottie-react";
 import AvatarCustomization from "./avatar/AvatarCustomization";
+import MoodTracker from "./MoodTracker";
 
 interface AvatarDisplayProps {
   level?: number;
@@ -39,7 +40,7 @@ const moodEmojis = {
 };
 
 const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
-  mood = "neutral",
+  mood = "😐",
   achievements = defaultAchievements,
   onCustomize = () => {},
 }) => {
@@ -55,6 +56,8 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center gap-6">
+      <MoodTracker />
+      <h1 className="text-2xl">How are you feeling?</h1>
       {/* Simplified Avatar Display */}
       <div className="w-48 h-48 rounded-full flex items-center justify-center shadow-lg overflow-hidden bg-background">
         <AnimatePresence mode="wait">
@@ -120,8 +123,8 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
           ))}
         </div>
       </div>
-
-      {/* Customize Button */}
+      {/*
+      
       <motion.div
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -146,7 +149,7 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
           </DialogContent>
         </Dialog>
       </motion.div>
-
+      */}
       {/* Achievements */}
       <motion.div 
         className="w-full max-w-md"

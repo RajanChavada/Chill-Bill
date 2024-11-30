@@ -1,6 +1,7 @@
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useEffect } from "react";
 
 interface EmojiSelectorProps {
   onMoodSelect?: (mood: string) => void;
@@ -11,6 +12,10 @@ interface EmojiSelectorProps {
     label: string;
   }>;
 }
+
+useEffect(() => {
+
+}, [])
 
 const defaultMoods = [
   { id: "happy", emoji: "😊", label: "Happy" },
