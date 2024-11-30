@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { Brain, Lightbulb, Plus, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Brain, Lightbulb, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,62 +12,61 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getFinancialInsights } from "@/lib/cloudflare";
-import { loadDailyData } from "@/lib/store";
-import { format } from "date-fns";
 
 interface Concern {
   id: string;
   text: string;
   stressLevel: number;
   tips: string[];
-  analysis?: string;
-  suggestedActions?: string[];
 }
 
+const mockConcerns: Concern[] = [
+  {
+    id: "1",
+    text: "Worried about student loans",
+    stressLevel: 8,
+    tips: [
+      "Consider income-driven repayment plans",
+      "Look into loan forgiveness programs",
+      "Create a dedicated loan repayment fund",
+    ],
+  },
+  {
+    id: "2",
+    text: "Anxious about retirement savings",
+    stressLevel: 6,
+    tips: [
+      "Start with small, regular contributions",
+      "Take advantage of employer matching",
+      "Consider a Roth IRA for tax benefits",
+    ],
+  },
+];
+
 const StressOMeter = () => {
-  const [concerns, setConcerns] = useState<Concern[]>([]);
+  const [concerns, setConcerns] = useState<Concern[]>(mockConcerns);
   const [newConcern, setNewConcern] = useState("");
   const [isAddingConcern, setIsAddingConcern] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const averageStress =
     concerns.reduce((sum, concern) => sum + concern.stressLevel, 0) /
-    (concerns.length || 1);
+    concerns.length;
 
-  const getCurrentMood = () => {
-    const today = format(new Date(), "yyyy-MM-dd");
-    const dailyData = loadDailyData();
-    return dailyData[today]?.mood || "neutral";
-  };
-
-  const handleAddConcern = async () => {
+  const handleAddConcern = () => {
     if (newConcern.trim()) {
-      setIsLoading(true);
-      try {
-        const insights = await getFinancialInsights(
-          newConcern,
-          getCurrentMood(),
-          averageStress,
-        );
-
-        const concern: Concern = {
-          id: Date.now().toString(),
-          text: newConcern,
-          stressLevel: Math.round(averageStress),
-          tips: insights.tips,
-          analysis: insights.analysis,
-          suggestedActions: insights.suggestedActions,
-        };
-
-        setConcerns([...concerns, concern]);
-        setNewConcern("");
-        setIsAddingConcern(false);
-      } catch (error) {
-        console.error("Error adding concern:", error);
-      } finally {
-        setIsLoading(false);
-      }
+      const concern: Concern = {
+        id: Date.now().toString(),
+        text: newConcern,
+        stressLevel: 5,
+        tips: [
+          "Take deep breaths",
+          "Break down the problem into smaller steps",
+          "Consider talking to a financial advisor",
+        ],
+      };
+      setConcerns([...concerns, concern]);
+      setNewConcern("");
+      setIsAddingConcern(false);
     }
   };
 
@@ -97,19 +97,8 @@ const StressOMeter = () => {
                   value={newConcern}
                   onChange={(e) => setNewConcern(e.target.value)}
                 />
-                <Button
-                  onClick={handleAddConcern}
-                  className="w-full"
-                  disabled={isLoading || !newConcern.trim()}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    "Add Concern"
-                  )}
+                <Button onClick={handleAddConcern} className="w-full">
+                  Add
                 </Button>
               </div>
             </DialogContent>
@@ -124,6 +113,7 @@ const StressOMeter = () => {
           <Progress
             value={(averageStress / 10) * 100}
             className="h-2"
+            // Add color based on stress level
             style={{
               background: `hsl(${Math.max(0, 120 - averageStress * 12)}, 100%, 50%)`,
             }}
@@ -138,13 +128,8 @@ const StressOMeter = () => {
                   <Brain className="h-5 w-5 text-primary" />
                   <span className="font-medium">{concern.text}</span>
                 </div>
+                <Badge variant="secondary">{concern.stressLevel}/10</Badge>
               </div>
-
-              {concern.analysis && (
-                <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
-                  {concern.analysis}
-                </div>
-              )}
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -156,19 +141,6 @@ const StressOMeter = () => {
                     <li key={index}>{tip}</li>
                   ))}
                 </ul>
-
-                {concern.suggestedActions && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-sm font-medium mb-2">
-                      Suggested Actions:
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                      {concern.suggestedActions.map((action, index) => (
-                        <li key={index}>{action}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             </div>
           ))}

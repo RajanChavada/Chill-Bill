@@ -46,8 +46,13 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+<<<<<<< HEAD
               className="text-destructive cursor-pointer"
               onClick={() => logout({ returnTo: window.location.origin })}
+=======
+              className="text-red-600 cursor-pointer"
+              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+>>>>>>> e34969c750fa7d27350f5d90875322fce5fd3629
             >
               Log out
             </DropdownMenuItem>
