@@ -66,7 +66,7 @@ function App() {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="text-2xl font-semibold text-center">
-                Welcome to Financial Wellness!
+                Welcome to Chill Bill!
               </DialogTitle>
               <DialogDescription className="text-center pt-2">
                 Let's get to know you better
@@ -86,7 +86,7 @@ function App() {
                   autoFocus
                 />
               </div>
-              <Button
+              <Button 
                 onClick={handleQuestionnaireSubmit}
                 className="w-full h-12 text-lg font-medium transition-all"
                 disabled={!firstName.trim()}
