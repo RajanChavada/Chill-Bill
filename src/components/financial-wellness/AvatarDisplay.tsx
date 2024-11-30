@@ -20,12 +20,17 @@ const defaultAchievements = [
 
 // Animation JSON files for different moods
 const moodAnimations = {
-  happy: "https://assets2.lottiefiles.com/packages/lf20_ydo1amjm.json",
-  neutral: "https://assets3.lottiefiles.com/packages/lf20_yzoqyyqf.json",
-  sad: "https://assets3.lottiefiles.com/packages/lf20_wdqlqkhq.json",
-  excited: "https://assets3.lottiefiles.com/packages/lf20_qdbb21wb.json",
-  anxious: "https://assets3.lottiefiles.com/packages/lf20_dep5n5xt.json",
-  stressed: "https://assets3.lottiefiles.com/packages/lf20_ky24lqwm.json",
+  happy:
+    "https://lottie.host/2a2a4e2c-3c46-4c7c-ab52-b9a3c7c8ba5c/KvYQHzGYtD.json",
+  neutral:
+    "https://lottie.host/2a2a4e2c-3c46-4c7c-ab52-b9a3c7c8ba5c/KvYQHzGYtD.json",
+  sad: "https://lottie.host/2a2a4e2c-3c46-4c7c-ab52-b9a3c7c8ba5c/KvYQHzGYtD.json",
+  excited:
+    "https://lottie.host/2a2a4e2c-3c46-4c7c-ab52-b9a3c7c8ba5c/KvYQHzGYtD.json",
+  anxious:
+    "https://lottie.host/2a2a4e2c-3c46-4c7c-ab52-b9a3c7c8ba5c/KvYQHzGYtD.json",
+  stressed:
+    "https://lottie.host/2a2a4e2c-3c46-4c7c-ab52-b9a3c7c8ba5c/KvYQHzGYtD.json",
 };
 
 const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
@@ -46,19 +51,24 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
         moodAnimations.neutral,
     )
       .then((response) => response.json())
-      .then((data) => setAnimationData(data));
+      .then((data) => setAnimationData(data))
+      .catch((error) => console.error("Error loading animation:", error));
   }, [mood]);
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       {/* Animated Avatar */}
-      <div className="relative w-48 h-48">
-        {animationData && (
+      <div className="relative w-48 h-48 bg-primary/5 rounded-full flex items-center justify-center">
+        {animationData ? (
           <Lottie
             animationData={animationData}
             loop={true}
             className="w-full h-full"
           />
+        ) : (
+          <div className="text-6xl">
+            {currentMood === "happy" ? "😊" : "😐"}
+          </div>
         )}
         <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-12 h-12 flex items-center justify-center shadow-md">
           <Sparkles className="w-4 h-4 mr-1" />

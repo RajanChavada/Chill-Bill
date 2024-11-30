@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Calendar as CalendarBase } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Settings, DollarSign } from "lucide-react";
@@ -19,39 +18,35 @@ import {
   saveSpendingLimits,
   loadDailyData,
   saveDailyData,
-  DailyData,
 } from "@/lib/store";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-interface SpendingCalendarProps {}
+interface DailyData {
+  spending: number;
+  mood: string;
+}
 
-const moods = [
-  { id: "happy", emoji: "😊", label: "Happy" },
-  { id: "neutral", emoji: "😐", label: "Neutral" },
-  { id: "sad", emoji: "😔", label: "Sad" },
-  { id: "excited", emoji: "🤩", label: "Excited" },
-  { id: "anxious", emoji: "😰", label: "Anxious" },
-  { id: "stressed", emoji: "😫", label: "Stressed" },
-];
-
-const Calendar = CalendarBase as any;
-
-const SpendingCalendar: React.FC<SpendingCalendarProps> = () => {
+export default function SpendingCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(),
   );
   const [spendingLimits, setSpendingLimits] = useState(loadSpendingLimits());
-  const [dailyData, setDailyData] = useState(loadDailyData());
+  const [dailyData, setDailyData] =
+    useState<Record<string, DailyData>>(loadDailyData());
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSpendingOpen, setIsSpendingOpen] = useState(false);
   const [newAmount, setNewAmount] = useState("");
-  const [selectedMood, setSelectedMood] = useState("neutral");
   const [newLimits, setNewLimits] = useState(spendingLimits);
+
+  // Calculate daily total for today
+  const today = format(new Date(), "yyyy-MM-dd");
+  const todayData = dailyData[today];
+  const todaySpending = todayData?.spending || 0;
+  const dailyProgress = (todaySpending / spendingLimits.daily) * 100;
 
   // Calculate monthly total
   const currentMonthTotal = Object.entries(dailyData)
     .filter(([date]) => date.startsWith(format(new Date(), "yyyy-MM")))
-    .reduce((sum, [_, data]) => sum + (data as DailyData).spending, 0);
+    .reduce((sum, [_, data]) => sum + data.spending, 0);
 
   const monthlyProgress = (currentMonthTotal / spendingLimits.monthly) * 100;
 
@@ -59,29 +54,26 @@ const SpendingCalendar: React.FC<SpendingCalendarProps> = () => {
     setSelectedDate(date);
     if (date) {
       const formattedDate = format(date, "yyyy-MM-dd");
-      const data = dailyData[formattedDate] as DailyData;
+      const data = dailyData[formattedDate];
       if (data) {
         setNewAmount(data.spending.toString());
-        setSelectedMood(data.mood);
       } else {
         setNewAmount("");
-        setSelectedMood("neutral");
       }
       setIsSpendingOpen(true);
     }
   };
 
-  const handleSaveData = () => {
+  const handleSaveAmount = () => {
     if (selectedDate && newAmount) {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
       const data: DailyData = {
         spending: Number(newAmount),
-        mood: selectedMood,
+        mood: "neutral",
       };
       saveDailyData(formattedDate, data);
       setDailyData(loadDailyData());
       setNewAmount("");
-      setSelectedMood("neutral");
       setIsSpendingOpen(false);
     }
   };
@@ -92,92 +84,127 @@ const SpendingCalendar: React.FC<SpendingCalendarProps> = () => {
     setIsSettingsOpen(false);
   };
 
-  const renderDay = (day: Date) => {
-    const formattedDate = format(day, "yyyy-MM-dd");
-    const data = dailyData[formattedDate] as DailyData;
-    if (!data) return null;
+  const renderDay = (date: Date) => {
+    const formattedDate = format(date, "yyyy-MM-dd");
+    const data = dailyData[formattedDate];
+    if (!data) return date.getDate();
 
-    const mood = moods.find((m) => m.id === data.mood);
     const isOverLimit = data.spending > spendingLimits.daily;
 
     return (
       <div
-        className={`w-full h-full flex flex-col items-center justify-center ${isOverLimit ? "bg-red-50" : "bg-green-50"} p-1`}
+        className={`w-full h-full flex flex-col items-center justify-center ${isOverLimit ? "bg-red-50" : "bg-green-50"}`}
       >
-        <div className="text-xs font-medium">${data.spending}</div>
-        <div className="text-lg">{mood?.emoji}</div>
+        <div className="text-lg font-medium">{date.getDate()}</div>
+        <div className="text-sm font-medium">${data.spending}</div>
       </div>
     );
   };
 
   return (
-    <Card className="bg-white shadow-sm w-full">
+    <Card className="bg-white shadow-lg rounded-xl w-full">
+      {/* Header */}
       <div className="p-6 border-b border-border">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Spending Calendar</h2>
+            <h2 className="text-2xl font-semibold text-primary">
+              Spending Calendar
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Daily limit: ${spendingLimits.daily} | Monthly limit: $
-              {spendingLimits.monthly}
+              Daily limit: ${spendingLimits.daily.toLocaleString()} | Monthly
+              limit: ${spendingLimits.monthly.toLocaleString()}
             </p>
           </div>
-          <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Settings className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Spending Limits</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Daily Limit ($)</Label>
-                  <Input
-                    type="number"
-                    value={newLimits.daily}
-                    onChange={(e) =>
-                      setNewLimits({
-                        ...newLimits,
-                        daily: Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Monthly Limit ($)</Label>
-                  <Input
-                    type="number"
-                    value={newLimits.monthly}
-                    onChange={(e) =>
-                      setNewLimits({
-                        ...newLimits,
-                        monthly: Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <Button onClick={handleUpdateLimits} className="w-full">
-                  Save Limits
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Monthly Progress</span>
-            <span>
-              ${currentMonthTotal} / ${spendingLimits.monthly}
+        {/* Daily Progress */}
+        <div className="space-y-3 mb-6">
+          <div className="flex justify-between text-sm font-medium">
+            <span>Today's Spending</span>
+            <span
+              className={
+                dailyProgress > 100 ? "text-destructive" : "text-primary"
+              }
+            >
+              ${todaySpending.toLocaleString()} / $
+              {spendingLimits.daily.toLocaleString()}
             </span>
           </div>
-          <Progress value={monthlyProgress} className="h-2" />
+          <Progress
+            value={dailyProgress}
+            className="h-3 rounded-lg"
+            style={{
+              background:
+                dailyProgress > 100 ? "var(--destructive)" : "var(--primary)",
+            }}
+          />
+        </div>
+
+        {/* Monthly Progress */}
+        <div className="space-y-3">
+          <div className="flex justify-between text-sm font-medium">
+            <span>Monthly Progress</span>
+            <span
+              className={
+                monthlyProgress > 100 ? "text-destructive" : "text-primary"
+              }
+            >
+              ${currentMonthTotal.toLocaleString()} / $
+              {spendingLimits.monthly.toLocaleString()}
+            </span>
+          </div>
+          <Progress
+            value={monthlyProgress}
+            className="h-3 rounded-lg"
+            style={{
+              background:
+                monthlyProgress > 100 ? "var(--destructive)" : "var(--primary)",
+            }}
+          />
         </div>
       </div>
 
+      {/* Calendar */}
       <div className="p-6">
+        <style>
+          {`
+            .rdp {
+              --rdp-cell-size: 100px !important;
+              margin: 0;
+              width: 100%;
+            }
+            .rdp-table {
+              width: 100%;
+              max-width: none;
+            }
+            .rdp-caption {
+              padding: 0 0 24px 0;
+            }
+            .rdp-cell {
+              height: 100px;
+              width: calc(100% / 7);
+            }
+            .rdp-head_cell {
+              height: 40px;
+              font-weight: 500;
+              color: var(--muted-foreground);
+            }
+            .rdp-day {
+              width: 100%;
+              height: 100%;
+              border-radius: 0;
+              font-size: 1rem;
+              cursor: pointer;
+            }
+          `}
+        </style>
         <Calendar
           mode="single"
           selected={selectedDate}
@@ -202,72 +229,92 @@ const SpendingCalendar: React.FC<SpendingCalendarProps> = () => {
             day_hidden: "invisible",
           }}
           components={{
-            Day: ({ date, ...props }) => {
-              const content = renderDay(date);
-              return (
-                <button {...props} className="w-full h-full">
-                  {content || date.getDate()}
-                </button>
-              );
-            },
+            Day: ({ date }) => (
+              <button
+                onClick={() => handleDateSelect(date)}
+                className="w-full h-full transition-colors hover:bg-accent/10"
+              >
+                {renderDay(date)}
+              </button>
+            ),
           }}
         />
       </div>
 
+      {/* Daily Spending Dialog */}
       <Dialog open={isSpendingOpen} onOpenChange={setIsSpendingOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Add Daily Data for{" "}
-              {selectedDate ? format(selectedDate, "MMM dd, yyyy") : ""}
+            <DialogTitle className="text-center text-xl font-semibold">
+              How much did you spend on{" "}
+              {selectedDate ? format(selectedDate, "MMM dd, yyyy") : ""}?
             </DialogTitle>
           </DialogHeader>
+
           <div className="space-y-6 pt-4">
-            <div className="space-y-2">
-              <Label>Amount Spent ($)</Label>
+            <div className="space-y-4">
               <Input
                 type="number"
                 value={newAmount}
                 onChange={(e) => setNewAmount(e.target.value)}
                 placeholder="Enter amount"
+                className="text-center text-2xl h-16 font-medium"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>How are you feeling?</Label>
-              <RadioGroup
-                value={selectedMood}
-                onValueChange={setSelectedMood}
-                className="grid grid-cols-3 gap-2"
-              >
-                {moods.map((mood) => (
-                  <div key={mood.id} className="text-center">
-                    <RadioGroupItem
-                      value={mood.id}
-                      id={mood.id}
-                      className="peer sr-only"
-                    />
-                    <Label
-                      htmlFor={mood.id}
-                      className="flex flex-col items-center gap-1 rounded-lg p-2 hover:bg-accent peer-checked:bg-accent peer-checked:text-accent-foreground cursor-pointer"
-                    >
-                      <span className="text-2xl">{mood.emoji}</span>
-                      <span className="text-xs">{mood.label}</span>
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
+            <Button
+              onClick={handleSaveAmount}
+              className="w-full h-12 text-lg font-medium transition-all hover:scale-[1.02]"
+            >
+              Save Amount
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-            <Button onClick={handleSaveData} className="w-full">
-              Save Data
+      {/* Settings Dialog */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Spending Limits
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label className="font-medium">Daily Limit ($)</Label>
+              <Input
+                type="number"
+                value={newLimits.daily}
+                onChange={(e) =>
+                  setNewLimits({ ...newLimits, daily: Number(e.target.value) })
+                }
+                className="text-lg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-medium">Monthly Limit ($)</Label>
+              <Input
+                type="number"
+                value={newLimits.monthly}
+                onChange={(e) =>
+                  setNewLimits({
+                    ...newLimits,
+                    monthly: Number(e.target.value),
+                  })
+                }
+                className="text-lg"
+              />
+            </div>
+            <Button
+              onClick={handleUpdateLimits}
+              className="w-full h-12 text-lg font-medium transition-all hover:scale-[1.02]"
+            >
+              Save Limits
             </Button>
           </div>
         </DialogContent>
       </Dialog>
     </Card>
   );
-};
-
-export default SpendingCalendar;
+}

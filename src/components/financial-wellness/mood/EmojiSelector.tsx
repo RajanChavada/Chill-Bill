@@ -1,5 +1,4 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
@@ -28,7 +27,7 @@ const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   moods = defaultMoods,
 }) => {
   return (
-    <Card className="w-[280px] h-[80px] bg-white p-4">
+    <div className="w-full bg-white rounded-lg p-4">
       <RadioGroup
         defaultValue={selectedMood}
         onValueChange={onMoodSelect}
@@ -43,7 +42,7 @@ const EmojiSelector: React.FC<EmojiSelectorProps> = ({
             />
             <Label
               htmlFor={mood.id}
-              className="flex flex-col items-center gap-1 rounded-lg p-1 hover:bg-accent peer-checked:bg-accent peer-checked:text-accent-foreground cursor-pointer"
+              className="flex flex-col items-center gap-1 rounded-lg p-2 hover:bg-accent peer-checked:bg-accent peer-checked:text-accent-foreground cursor-pointer transition-all"
             >
               <span className="text-2xl" role="img" aria-label={mood.label}>
                 {mood.emoji}
@@ -53,7 +52,7 @@ const EmojiSelector: React.FC<EmojiSelectorProps> = ({
           </div>
         ))}
       </RadioGroup>
-    </Card>
+    </div>
   );
 };
 

@@ -78,36 +78,42 @@ const AvatarCustomization: React.FC<AvatarCustomizationProps> = ({
   availableFeatures = defaultFeatures,
 }) => {
   return (
-    <Card className="w-[300px] h-[400px] bg-white p-4 overflow-y-auto">
+    <div className="p-6 bg-white rounded-lg space-y-6">
+      <h2 className="text-lg font-semibold mb-4">Customize Your Avatar</h2>
+
       <Tabs defaultValue="outfits" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger
             value="outfits"
-            className="flex flex-col items-center gap-1"
+            className="flex flex-col items-center gap-1 p-3"
           >
-            <Shirt className="h-4 w-4" />
+            <Shirt className="h-5 w-5" />
             <span className="text-xs">Outfits</span>
           </TabsTrigger>
           <TabsTrigger
             value="colors"
-            className="flex flex-col items-center gap-1"
+            className="flex flex-col items-center gap-1 p-3"
           >
-            <Palette className="h-4 w-4" />
+            <Palette className="h-5 w-5" />
             <span className="text-xs">Colors</span>
           </TabsTrigger>
           <TabsTrigger
             value="features"
-            className="flex flex-col items-center gap-1"
+            className="flex flex-col items-center gap-1 p-3"
           >
-            <User className="h-4 w-4" />
+            <User className="h-5 w-5" />
             <span className="text-xs">Features</span>
           </TabsTrigger>
         </TabsList>
 
         {Object.entries(availableFeatures).map(([category, features]) => (
-          <TabsContent key={category} value={category} className="mt-0">
+          <TabsContent
+            key={category}
+            value={category}
+            className="mt-0 space-y-4"
+          >
             <div className="space-y-4">
-              <Label className="text-sm font-medium">
+              <Label className="text-sm font-medium block mb-3">
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </Label>
               <RadioGroup
@@ -116,7 +122,7 @@ const AvatarCustomization: React.FC<AvatarCustomizationProps> = ({
                 className="grid grid-cols-3 gap-4"
               >
                 {features.map((feature) => (
-                  <div key={feature.id} className="text-center space-y-2">
+                  <div key={feature.id} className="text-center">
                     <RadioGroupItem
                       value={feature.id}
                       id={feature.id}
@@ -124,14 +130,16 @@ const AvatarCustomization: React.FC<AvatarCustomizationProps> = ({
                     />
                     <Label
                       htmlFor={feature.id}
-                      className="flex flex-col items-center gap-2 rounded-lg border-2 border-muted p-2 hover:bg-accent peer-checked:border-primary peer-checked:bg-accent cursor-pointer"
+                      className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-muted hover:bg-accent peer-checked:border-primary peer-checked:bg-primary/5 cursor-pointer transition-all"
                     >
                       <img
                         src={feature.preview}
                         alt={feature.name}
-                        className="w-12 h-12 rounded"
+                        className="w-12 h-12 rounded-lg object-cover"
                       />
-                      <span className="text-xs">{feature.name}</span>
+                      <span className="text-xs font-medium">
+                        {feature.name}
+                      </span>
                     </Label>
                   </div>
                 ))}
@@ -141,15 +149,15 @@ const AvatarCustomization: React.FC<AvatarCustomizationProps> = ({
         ))}
       </Tabs>
 
-      <div className="mt-4 flex justify-end">
+      <div className="pt-4 border-t">
         <Button
-          onClick={() => console.log("Save customization")}
           className="w-full"
+          onClick={() => console.log("Save customization")}
         >
           Save Changes
         </Button>
       </div>
-    </Card>
+    </div>
   );
 };
 
