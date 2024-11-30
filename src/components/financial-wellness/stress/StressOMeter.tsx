@@ -43,30 +43,90 @@ const mockConcerns: Concern[] = [
   },
 ];
 
+const WORKER_URL = "https://financial-stress-ai.jimmychavada22.workers.dev";
+
 const StressOMeter = () => {
   const [concerns, setConcerns] = useState<Concern[]>(mockConcerns);
   const [newConcern, setNewConcern] = useState("");
   const [isAddingConcern, setIsAddingConcern] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const averageStress =
     concerns.reduce((sum, concern) => sum + concern.stressLevel, 0) /
     concerns.length;
 
-  const handleAddConcern = () => {
-    if (newConcern.trim()) {
-      const concern: Concern = {
-        id: Date.now().toString(),
-        text: newConcern,
-        stressLevel: 5,
-        tips: [
-          "Take deep breaths",
-          "Break down the problem into smaller steps",
-          "Consider talking to a financial advisor",
+  const generateAIResponse = async (concern: string) => {
+    try {
+      if (!WORKER_URL) {
+        throw new Error('Worker URL is not configured');
+      }
+
+      console.log('Attempting to fetch from:', WORKER_URL);
+      
+      const response = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          concern: concern
+        }),
+      });
+
+      console.log('Raw response:', response);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error:', errorText);
+        throw new Error(`Server responded with ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Parsed response:', data);
+      
+      return {
+        tips: data.result?.tips || [
+          "Take deep breaths and assess your situation calmly",
+          "Consider creating a detailed budget",
+          "Consult with a financial advisor"
         ],
+        stressLevel: data.result?.stressLevel || 5
       };
-      setConcerns([...concerns, concern]);
-      setNewConcern("");
-      setIsAddingConcern(false);
+    } catch (error) {
+      console.error('Error in generateAIResponse:', error);
+      return {
+        tips: [
+          "Take deep breaths and assess your situation calmly",
+          "Consider creating a detailed budget",
+          "Consult with a financial advisor"
+        ],
+        stressLevel: 5
+      };
+    }
+  };
+
+  const handleAddConcern = async () => {
+    if (newConcern.trim()) {
+      setIsLoading(true);
+      try {
+        const aiResponse = await generateAIResponse(newConcern);
+        
+        const concern: Concern = {
+          id: Date.now().toString(),
+          text: newConcern,
+          stressLevel: aiResponse.stressLevel,
+          tips: aiResponse.tips,
+        };
+        
+        setConcerns([...concerns, concern]);
+        setNewConcern("");
+        setIsAddingConcern(false);
+      } catch (error) {
+        console.error('Error in handleAddConcern:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -87,18 +147,33 @@ const StressOMeter = () => {
                 Add Concern
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent aria-describedby="concern-dialog-description">
               <DialogHeader>
                 <DialogTitle>Add Financial Concern</DialogTitle>
+                <p id="concern-dialog-description" className="text-sm text-muted-foreground">
+                  Share your financial concern and get AI-powered advice.
+                </p>
               </DialogHeader>
               <div className="space-y-4 pt-4">
                 <Input
                   placeholder="What's worrying you?"
                   value={newConcern}
                   onChange={(e) => setNewConcern(e.target.value)}
+                  disabled={isLoading}
                 />
-                <Button onClick={handleAddConcern} className="w-full">
-                  Add
+                <Button 
+                  onClick={handleAddConcern} 
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <span className="animate-spin">⚪</span>
+                      Analyzing...
+                    </div>
+                  ) : (
+                    'Add'
+                  )}
                 </Button>
               </div>
             </DialogContent>
