@@ -39,7 +39,7 @@ const moodEmojis = {
 };
 
 const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
-  mood = "neutral",
+  mood = "😐",
   achievements = defaultAchievements,
   onCustomize = () => {},
 }) => {
