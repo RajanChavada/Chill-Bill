@@ -72,7 +72,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </DropdownMenu>
         </header>
 
-        <main className="p-8">
+        <main className="p-8 wrapper">
           <div ref={dashboardRef}>{/* Dashboard Section */}</div>
           <div ref={calendarRef}>{/* Calendar Section */}</div>
           <div ref={discussionBoardRef}>{/* Discussion Board Section */}</div>
