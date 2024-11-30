@@ -18,14 +18,11 @@ export default {
         const prompt = `As a financial advisor, analyze this concern: "${concern}"
 
 Please provide:
-1. Three specific, actionable tips to address this concern
+1. Three specific, actionable tips to address this concern in detail
 2. A stress level rating from 1-10 based on the severity of the concern
 
-Format your response as follows:
-{
-  "tips": ["tip1", "tip2", "tip3"],
-  "stressLevel": number
-}`;
+can you format it not as JSON object, but just as plain bullet points?
+`;
   
         // Call the Llama-2 model
         const aiResponse = await env.AI.run("@cf/meta/llama-2-7b-chat-int8", {
