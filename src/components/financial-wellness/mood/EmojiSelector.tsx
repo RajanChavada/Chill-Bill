@@ -28,7 +28,7 @@ const defaultMoods = [
 
 const EmojiSelector: React.FC<EmojiSelectorProps> = ({
   onMoodSelect = () => {},
-  selectedMood = "neutral",
+  selectedMood = "😐",
   moods = defaultMoods,
 }) => {
   return (
