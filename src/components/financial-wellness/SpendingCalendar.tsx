@@ -60,6 +60,12 @@ export default function SpendingCalendar() {
 
   const monthlyProgress = (currentMonthTotal / spendingLimits.monthly) * 100;
 
+  const getProgressBarColor = (progress: number) => {
+    if (progress < 50) return "bg-green-500"; // Green for less than 50%
+    if (progress < 100) return "bg-yellow-500"; // Yellow for 50% to 99%
+    return "bg-red-500"; // Red for 100% and above
+  };
+
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     if (date) {
@@ -146,23 +152,11 @@ export default function SpendingCalendar() {
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-sm font-medium">
             <span>Today's Spending</span>
-            <span
-              className={
-                dailyProgress > 100 ? "text-destructive" : "text-primary"
-              }
-            >
-              ${todaySpending.toLocaleString()} / $
-              {spendingLimits.daily.toLocaleString()}
+            <span className={todaySpending > spendingLimits.daily ? "text-destructive" : "text-primary"}>
+              ${todaySpending.toLocaleString()} / ${spendingLimits.daily.toLocaleString()}
             </span>
           </div>
-          <Progress
-            value={dailyProgress}
-            className="h-3 rounded-lg"
-            style={{
-              background:
-                dailyProgress > 100 ? "var(--destructive)" : "var(--primary)",
-            }}
-          />
+          <Progress value={dailyProgress} className={`h-2 ${getProgressBarColor(dailyProgress)}`} />
         </div>
 
         {/* Monthly Progress */}
@@ -180,11 +174,7 @@ export default function SpendingCalendar() {
           </div>
           <Progress
             value={monthlyProgress}
-            className="h-3 rounded-lg"
-            style={{
-              background:
-                monthlyProgress > 100 ? "var(--destructive)" : "var(--primary)",
-            }}
+            className={`h-2 ${getProgressBarColor(monthlyProgress)}`}
           />
         </div>
       </div>

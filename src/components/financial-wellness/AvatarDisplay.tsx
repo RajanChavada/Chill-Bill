@@ -13,13 +13,13 @@ interface AvatarDisplayProps {
   onCustomize?: () => void;
 }
 
-// Define mood options
+// Define mood options with color palettes
 const moodOptions = [
-  { emoji: '😊', label: 'Very Happy' },
-  { emoji: '🙂', label: 'Good' },
-  { emoji: '😐', label: 'Neutral' },
-  { emoji: '😕', label: 'Sad' },
-  { emoji: '😫', label: 'Stressed' },
+  { emoji: '😊', label: 'Very Happy', positiveColor: 'bg-green-200', negativeColor: 'bg-red-200' },
+  { emoji: '🙂', label: 'Good', positiveColor: 'bg-blue-200', negativeColor: 'bg-yellow-200' },
+  { emoji: '😐', label: 'Neutral', positiveColor: 'bg-gray-200', negativeColor: 'bg-gray-400' },
+  { emoji: '😕', label: 'Sad', positiveColor: 'bg-yellow-200', negativeColor: 'bg-red-300' },
+  { emoji: '😫', label: 'Stressed', positiveColor: 'bg-red-300', negativeColor: 'bg-red-500' },
 ] as const;
 
 const defaultAchievements = [
@@ -47,7 +47,7 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   const [currentMood, setCurrentMood] = useState(mood);
   const [selectedMood, setSelectedMood] = useState<string>(moodOptions[2].emoji);
 
-  // Handle mood selection with animation
+  // Handle mood selection with animation and color change
   const handleMoodSelect = (emoji: string) => {
     setSelectedMood(emoji);
     setCurrentMood(emoji);
@@ -96,9 +96,7 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
               onClick={() => handleMoodSelect(emoji)}
               className={`
                 p-4 rounded-xl transition-all
-                ${selectedMood === emoji 
-                  ? 'bg-primary/10' 
-                  : 'bg-white hover:bg-primary/5'}
+                ${selectedMood === emoji ? 'bg-transparent' : 'bg-transparent'}
                 flex flex-col items-center gap-2
                 shadow-md hover:shadow-lg
               `}
@@ -106,7 +104,6 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
               whileTap={{ scale: 0.95 }}
               animate={{
                 scale: selectedMood === emoji ? 1.1 : 1,
-                backgroundColor: selectedMood === emoji ? 'rgba(var(--primary), 0.1)' : 'white',
               }}
               transition={{
                 type: "spring",
