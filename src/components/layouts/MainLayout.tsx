@@ -59,7 +59,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="p-8 bg-gradient-to-r from-cyan-50 to-blue-200">{children}</main>
+        <main className="p-8 wrapper">{children}</main>
       </div>
     </>
   );
