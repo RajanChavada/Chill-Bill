@@ -86,7 +86,7 @@ function App() {
                   autoFocus
                 />
               </div>
-              <Button
+              <Button 
                 onClick={handleQuestionnaireSubmit}
                 className="w-full h-12 text-lg font-medium transition-all"
                 disabled={!firstName.trim()}

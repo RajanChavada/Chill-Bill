@@ -4,6 +4,8 @@ import { Label } from "@/components/ui/label";
 import { useAuth0 } from "@auth0/auth0-react";
 import { loadUserPreferences } from "@/lib/store";
 import EmojiSelector from "./mood/EmojiSelector";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 interface MoodTrackerProps {
   onMoodSelect?: (mood: string) => void;
@@ -12,17 +14,16 @@ interface MoodTrackerProps {
 
 const MoodTracker: React.FC<MoodTrackerProps> = ({
   onMoodSelect = () => {},
-  onJournalSubmit = () => {},
   selectedMood = "neutral",
 }) => {
   const { user } = useAuth0();
   const preferences = loadUserPreferences();
   const displayName =
     preferences?.firstName || user?.name?.split(" ")[0] || "User";
-
-  const getGreeting = () => {
+  const [text, setText] = useState("");
+  
+  const getGreeting = React.useMemo(() => {
     const hour = new Date().getHours();
-
     if (hour >= 0 && hour < 12) {
       return "Good morning";
     } else if (hour >= 12 && hour < 18) {
@@ -32,30 +33,14 @@ const MoodTracker: React.FC<MoodTrackerProps> = ({
     } else {
       return "Good night";
     }
-  };
+  }, []);
 
   return (
-    <>
-      <Card className="w-[400px] bg-white p-6 space-y-6">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold text-primary">
-            {getGreeting()}, {displayName}!
-          </h2>
-          <Label className="text-lg font-medium block"></Label>
-        </div>
-      </Card>
-      <Card className="w-[325px] h-[300px] bg-white p-5 space-y-4">
-        <div>
-          <Label className="text-sm font-medium mb-2 block">
-            How are you feeling?
-          </Label>
-        </div>
-        <EmojiSelector
-          onMoodSelect={onMoodSelect}
-          selectedMood={selectedMood}
-        />
-      </Card>
-    </>
+    <h2 className="text-4xl font-semibold text-primary w-full flex justify-between items-center">
+      <span className="flex-grow">
+        {getGreeting}, {displayName}! 👋
+      </span>
+    </h2>
   );
 };
 
