@@ -36,7 +36,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-red-600 cursor-pointer"
-              onClick={() => logout({ returnTo: window.location.origin })}
+              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
             >
               Log out
             </DropdownMenuItem>

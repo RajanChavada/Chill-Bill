@@ -13,14 +13,14 @@ interface MoodTrackerProps {
 }
 
 const MoodTracker: React.FC<MoodTrackerProps> = ({
-  onMoodSelect = () => {},
-  onJournalSubmit = () => {},
+  onMoodSelect = () => { },
+  onJournalSubmit = () => { },
   selectedMood = "neutral",
   defaultJournalEntry = "",
   isSubmitting = false,
 }) => {
   return (
-    <Card className="w-[300px] h-[200px] bg-white p-4 space-y-4">
+    <Card className="w-[325px] h-[300px] bg-white p-5 space-y-4">
       <div>
         <Label className="text-sm font-medium mb-2 block">
           How are you feeling?
