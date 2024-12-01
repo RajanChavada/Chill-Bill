@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRef } from "react";
+import Chill from "@/assets/Chill.png";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth0();
@@ -23,14 +24,10 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-white">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-8 shadow-md">
-          <h1 className="text-xl font-semibold text-primary">
-            Chill-Bill
-
-          </h1>
-
-          <nav className="flex space-x-4">
+          <nav className="flex items-center space-x-4">
+            <img src={Chill} alt="Chill" className="w-20 h-20" />
             <Button variant="link" onClick={() => dashboardRef.current?.scrollIntoView({ behavior: 'smooth' })}>Dashboard</Button>
             <Button variant="link" onClick={() => calendarRef.current?.scrollIntoView({ behavior: 'smooth' })}>Calendar</Button>
             <Button variant="link" onClick={() => discussionBoardRef.current?.scrollIntoView({ behavior: 'smooth' })}>Discussion Board</Button>
@@ -78,7 +75,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           <div ref={discussionBoardRef}>{/* Discussion Board Section */}</div>
           {children}
         </main>
-
       </div>
     </>
   );

@@ -54,10 +54,19 @@ const GroupChallenges = () => {
       <div className="space-y-6">
         {mockChallenges.map((challenge) => {
           const progress =
-            (challenge.currentAmount / challenge.targetAmount) * 100;
+            challenge.targetAmount > 0
+              ? (challenge.currentAmount / challenge.targetAmount) * 100
+              : 0;
 
           return (
-            <div key={challenge.id} className="border rounded-lg p-4 space-y-4">
+            <div
+              key={challenge.id}
+              className="border rounded-lg p-4 space-y-4"
+              style={{
+                backgroundColor: '#ecf87f', // Very light yellow background
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // Box shadow
+              }}
+            >
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-medium">{challenge.title}</h3>
