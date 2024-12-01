@@ -112,7 +112,12 @@ export default function SpendingCalendar() {
   const [rewardPoints, setRewardPoints] = useState(0);
   const [achievementMessage, setAchievementMessage] = useState<string | null>(null);
   const [aiTip, setAiTip] = useState<string | null>(null);
+  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
+  const [isProcessingTransactions, setIsProcessingTransactions] = useState(false);
+
+  const [bankAccountName, setBankAccountName] = useState<string | null>(null);
 
   // Calculate daily total for today
   const today = format(new Date(), "yyyy-MM-dd");
@@ -175,7 +180,7 @@ export default function SpendingCalendar() {
           // Save merged data and refresh calendar
           console.log("Final data to save:", existingData);
           Object.entries(existingData).forEach(([date, data]) => {
-            saveDailyData(date, data);
+            saveDailyData(date, data as DailyData);
           });
           setDailyData(existingData);
         } else {
