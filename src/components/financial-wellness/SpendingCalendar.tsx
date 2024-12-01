@@ -24,8 +24,18 @@ import { usePlaidLink } from "react-plaid-link";
 
 interface DailyData {
   spending: number;
-  mood: string;
+  mood: '😊' | '🙂' | '😐' | '😕' | '😫';
+  anxietyLevel: number;
 }
+
+
+const moodOptions = [
+  { emoji: '😊', label: 'Very Calm', anxietyLevel: 1 },
+  { emoji: '🙂', label: 'Relaxed', anxietyLevel: 3 },
+  { emoji: '😐', label: 'Neutral', anxietyLevel: 5 },
+  { emoji: '😕', label: 'Anxious', anxietyLevel: 7 },
+  { emoji: '😫', label: 'Very Anxious', anxietyLevel: 9 },
+] as const;
 
 export default function SpendingCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -63,7 +73,8 @@ const handleFetchTransactions = async () => {
   } else {
     console.error('Access token or selected account is not available');
   }
-};
+};  const [selectedMood, setSelectedMood] = useState<DailyData['mood']>('😐');
+
   // Calculate daily total for today
   const today = format(new Date(), "yyyy-MM-dd");
   const todayData = dailyData[today];
@@ -106,6 +117,12 @@ const handleFetchTransactions = async () => {
 
   const monthlyProgress = (currentMonthTotal / spendingLimits.monthly) * 100;
 
+  const getProgressBarColor = (progress: number) => {
+    if (progress < 50) return "bg-green-500"; // Green for less than 50%
+    if (progress < 100) return "bg-yellow-500"; // Yellow for 50% to 99%
+    return "bg-red-500"; // Red for 100% and above
+  };
+
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     if (date) {
@@ -123,13 +140,18 @@ const handleFetchTransactions = async () => {
   const handleSaveAmount = () => {
     if (selectedDate && newAmount) {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      const selectedMoodData = moodOptions.find(m => m.emoji === selectedMood)!;
+      
       const data: DailyData = {
         spending: Number(newAmount),
-        mood: "neutral",
+        mood: selectedMood,
+        anxietyLevel: selectedMoodData.anxietyLevel
       };
+      
       saveDailyData(formattedDate, data);
       setDailyData(loadDailyData());
       setNewAmount("");
+      setSelectedMood('😐');
       setIsSpendingOpen(false);
     }
   };
@@ -149,10 +171,13 @@ const handleFetchTransactions = async () => {
 
     return (
       <div
-        className={`w-full h-full flex flex-col items-center justify-center ${isOverLimit ? "bg-red-50" : "bg-green-50"}`}
+        className={`w-full h-full flex flex-col items-center justify-center ${
+          isOverLimit ? "bg-red-50" : "bg-green-50"
+        }`}
       >
         <div className="text-lg font-medium">{date.getDate()}</div>
         <div className="text-sm font-medium">${data.spending}</div>
+        <div className="text-xl mt-1">{data.mood}</div>
       </div>
 
     );
@@ -193,23 +218,11 @@ const handleFetchTransactions = async () => {
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-sm font-medium">
             <span>Today's Spending</span>
-            <span
-              className={
-                dailyProgress > 100 ? "text-destructive" : "text-primary"
-              }
-            >
-              ${todaySpending.toLocaleString()} / $
-              {spendingLimits.daily.toLocaleString()}
+            <span className={todaySpending > spendingLimits.daily ? "text-destructive" : "text-primary"}>
+              ${todaySpending.toLocaleString()} / ${spendingLimits.daily.toLocaleString()}
             </span>
           </div>
-          <Progress
-            value={dailyProgress}
-            className="h-3 rounded-lg"
-            style={{
-              background:
-                dailyProgress > 100 ? "var(--destructive)" : "var(--primary)",
-            }}
-          />
+          <Progress value={dailyProgress} className={`h-2 ${getProgressBarColor(dailyProgress)}`} />
         </div>
 
         {/* Monthly Progress */}
@@ -227,11 +240,7 @@ const handleFetchTransactions = async () => {
           </div>
           <Progress
             value={monthlyProgress}
-            className="h-3 rounded-lg"
-            style={{
-              background:
-                monthlyProgress > 100 ? "var(--destructive)" : "var(--primary)",
-            }}
+            className={`h-2 ${getProgressBarColor(monthlyProgress)}`}
           />
         </div>
       </div>
@@ -311,8 +320,8 @@ const handleFetchTransactions = async () => {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-center text-xl font-semibold">
-              How much did you spend on{" "}
-              {selectedDate ? format(selectedDate, "MMM dd, yyyy") : ""}?
+              Add your spending for{" "}
+              {selectedDate ? format(selectedDate, "MMM dd, yyyy") : ""}
             </DialogTitle>
           </DialogHeader>
 
@@ -325,13 +334,34 @@ const handleFetchTransactions = async () => {
                 placeholder="Enter amount"
                 className="text-center text-2xl h-16 font-medium"
               />
+
+              <div className="space-y-2">
+                <Label className="text-center block">How anxious do you feel about this spending?</Label>
+                <div className="flex justify-center gap-4">
+                  {moodOptions.map(({ emoji, label }) => (
+                    <button
+                      key={emoji}
+                      onClick={() => setSelectedMood(emoji)}
+                      className={`p-3 text-2xl rounded-full transition-all ${
+                        selectedMood === emoji
+                          ? 'bg-accent scale-110'
+                          : 'hover:bg-accent/50'
+                      }`}
+                      title={label}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <Button
               onClick={handleSaveAmount}
               className="w-full h-12 text-lg font-medium transition-all hover:scale-[1.02]"
+              disabled={!newAmount || !selectedMood}
             >
-              Save Amount
+              Save Entry
             </Button>
           </div>
         </DialogContent>
