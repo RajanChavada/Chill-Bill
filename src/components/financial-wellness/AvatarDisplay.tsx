@@ -15,12 +15,20 @@ interface AvatarDisplayProps {
 }
 
 // Define mood options with color palettes
-const moodOptions = [
+/*const moodOptions = [
   { emoji: '😊', label: 'Very Happy', positiveColor: 'bg-green-200', negativeColor: 'bg-red-200' },
   { emoji: '🙂', label: 'Good', positiveColor: 'bg-blue-200', negativeColor: 'bg-yellow-200' },
   { emoji: '😐', label: 'Neutral', positiveColor: 'bg-gray-200', negativeColor: 'bg-gray-400' },
   { emoji: '😕', label: 'Sad', positiveColor: 'bg-yellow-200', negativeColor: 'bg-red-300' },
   { emoji: '😫', label: 'Stressed', positiveColor: 'bg-red-300', negativeColor: 'bg-red-500' },
+] as const;*/
+
+const moodOptions = [
+  { emoji: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=George', label: 'Very Happy', positiveColor: 'bg-green-200', negativeColor: 'bg-red-200' },
+  { emoji: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Riley', label: 'Good', positiveColor: 'bg-blue-200', negativeColor: 'bg-yellow-200' },
+  { emoji: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Jack', label: 'Neutral', positiveColor: 'bg-gray-200', negativeColor: 'bg-gray-400' },
+  { emoji: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Aidan', label: 'Sad', positiveColor: 'bg-yellow-200', negativeColor: 'bg-red-300' },
+  { emoji: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Destiny', label: 'Stressed', positiveColor: 'bg-red-300', negativeColor: 'bg-red-500' },
 ] as const;
 
 const defaultAchievements = [
@@ -31,16 +39,16 @@ const defaultAchievements = [
 
 // Use static emoji instead of Lottie animations for now
 const moodEmojis = {
-  happy: '😊',
-  neutral: '😐',
-  sad: '😕',
-  excited: '🤗',
-  anxious: '😰',
-  stressed: '😫',
+  happy: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Riley',
+  neutral: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Jack',
+  sad: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Aidan',
+  excited: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=George',
+  anxious: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Oliver',
+  stressed: 'https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Destiny',
 };
 
 const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
-  mood = "😐",
+  mood = "https://api.dicebear.com/9.x/avataaars-neutral/svg?seed=Jack",
   achievements = defaultAchievements,
   onCustomize = () => {},
 }) => {
@@ -60,7 +68,7 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
       <h1 className="text-2xl">How are you feeling?</h1>
       {/* Simplified Avatar Display */}
       <div className="w-48 h-48 rounded-full flex items-center justify-center shadow-lg overflow-hidden bg-background">
-        <AnimatePresence mode="wait">
+        {/*<AnimatePresence mode="wait">
           <motion.div
             key={currentMood}
             initial={{ 
@@ -85,9 +93,11 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
             }}
             className="text-6xl"
           >
-            {currentMood}
+           {currentMood}
+            
           </motion.div>
-        </AnimatePresence>
+        </AnimatePresence>*/}
+        <img src={currentMood} alt="avatar"></img>
       </div>
 
       {/* Mood Selection Grid */}
@@ -115,7 +125,8 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
               }}
               title={label}
             >
-              <span className="text-2xl">{emoji}</span>
+              {/*<span className="text-2xl">{emoji}</span>*/}
+              <img src={emoji} alt="avatar"></img>
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {label}
               </span>

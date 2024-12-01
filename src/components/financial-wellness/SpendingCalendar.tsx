@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,21 +19,25 @@ import {
   loadDailyData,
   saveDailyData,
 } from "@/lib/store";
-import { useEffect } from "react";
+import {
+  createLinkToken,
+  exchangePublicToken,
+  fetchTransactions,
+} from "@/lib/utils";
+import { usePlaidLink } from "react-plaid-link";
 
 interface DailyData {
   spending: number;
-  mood: '😊' | '🙂' | '😐' | '😕' | '😫';
+  mood: "😊" | "🙂" | "😐" | "😕" | "😫";
   anxietyLevel: number;
 }
 
-
 const moodOptions = [
-  { emoji: '😊', label: 'Very Calm', anxietyLevel: 1 },
-  { emoji: '🙂', label: 'Relaxed', anxietyLevel: 3 },
-  { emoji: '😐', label: 'Neutral', anxietyLevel: 5 },
-  { emoji: '😕', label: 'Anxious', anxietyLevel: 7 },
-  { emoji: '😫', label: 'Very Anxious', anxietyLevel: 9 },
+  { emoji: "😊", label: "Very Calm", anxietyLevel: 1 },
+  { emoji: "🙂", label: "Relaxed", anxietyLevel: 3 },
+  { emoji: "😐", label: "Neutral", anxietyLevel: 5 },
+  { emoji: "😕", label: "Anxious", anxietyLevel: 7 },
+  { emoji: "😫", label: "Very Anxious", anxietyLevel: 9 },
 ] as const;
 
 const aiInsights = [
@@ -103,10 +107,12 @@ export default function SpendingCalendar() {
   const [isSpendingOpen, setIsSpendingOpen] = useState(false);
   const [newAmount, setNewAmount] = useState("");
   const [newLimits, setNewLimits] = useState(spendingLimits);
+
   const [selectedMood, setSelectedMood] = useState<DailyData['mood']>('😐');
   const [rewardPoints, setRewardPoints] = useState(0);
   const [achievementMessage, setAchievementMessage] = useState<string | null>(null);
   const [aiTip, setAiTip] = useState<string | null>(null);
+
 
   // Calculate daily total for today
   const today = format(new Date(), "yyyy-MM-dd");
@@ -121,10 +127,102 @@ export default function SpendingCalendar() {
 
   const monthlyProgress = (currentMonthTotal / spendingLimits.monthly) * 100;
 
+  const handleCreateLinkToken = async () => {
+    await createLinkToken();
+  };
+
+  const handleExchangePublicToken = async (publicToken: string) => {
+    try {
+      const data = await exchangePublicToken(publicToken);
+      setAccessToken(data.access_token);
+      console.log("Access Token:", data.access_token);
+    } catch (error) {
+      console.error("Error exchanging public token:", error);
+    }
+  };
+
+  const handleFetchTransactions = async () => {
+    if (accessToken) {
+      try {
+        setIsProcessingTransactions(true);
+        console.log("Fetching transactions...");
+        const transactionData = await fetchTransactions(accessToken);
+        console.log("Received transaction data:", transactionData);
+
+        // Get existing data
+        const existingData = { ...loadDailyData() };
+        console.log("Existing data:", existingData);
+
+        // Process transactions and merge with existing data
+        if (transactionData?.transactions) {
+          transactionData.transactions.forEach((transaction) => {
+            console.log("Processing transaction:", transaction);
+            const date = transaction.authorized_date;
+            if (date) {
+              if (!existingData[date]) {
+                existingData[date] = {
+                  spending: 0,
+                  mood: "😐",
+                  anxietyLevel: 5,
+                };
+              }
+              // Add to the spending amount for that date
+              existingData[date].spending += Math.abs(transaction.amount);
+              console.log(`Updated data for ${date}:`, existingData[date]);
+            }
+          });
+
+          // Save merged data and refresh calendar
+          console.log("Final data to save:", existingData);
+          Object.entries(existingData).forEach(([date, data]) => {
+            saveDailyData(date, data);
+          });
+          setDailyData(existingData);
+        } else {
+          console.error("No transactions found in response");
+        }
+      } catch (error) {
+        console.error("Error processing transactions:", error);
+      } finally {
+        setIsProcessingTransactions(false);
+      }
+    } else {
+      console.error("Access token or selected account is not available");
+    }
+  };
+
+  useEffect(() => {
+    const fetchLinkToken = async () => {
+      try {
+        const data = await createLinkToken();
+        setLinkToken(data.link_token);
+      } catch (error) {
+        console.error("Error fetching link token:", error);
+      }
+    };
+    fetchLinkToken();
+  }, []);
+
+  const onSuccess = async (public_token: string, metadata: any) => {
+    try {
+      const data = await exchangePublicToken(public_token);
+      setAccessToken(data.access_token);
+      setBankAccountName(metadata.institution.name);
+      console.log("Access Token:", data.access_token);
+    } catch (error) {
+      console.error("Error exchanging public token:", error);
+    }
+  };
+
+  const { open, ready } = usePlaidLink({
+    token: linkToken!,
+    onSuccess,
+  });
+
   const getProgressBarColor = (progress: number) => {
-    if (progress < 50) return "bg-green-500"; // Green for less than 50%
-    if (progress < 100) return "bg-yellow-500"; // Yellow for 50% to 99%
-    return "bg-red-500"; // Red for 100% and above
+    if (progress < 50) return "bg-green-500";
+    if (progress < 100) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -156,18 +254,20 @@ export default function SpendingCalendar() {
   const handleSaveAmount = () => {
     if (selectedDate && newAmount) {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
-      const selectedMoodData = moodOptions.find(m => m.emoji === selectedMood)!;
-      
+      const selectedMoodData = moodOptions.find(
+        (m) => m.emoji === selectedMood,
+      )!;
+
       const data: DailyData = {
         spending: Number(newAmount),
         mood: selectedMood,
-        anxietyLevel: selectedMoodData.anxietyLevel
+        anxietyLevel: selectedMoodData.anxietyLevel,
       };
-      
+
       saveDailyData(formattedDate, data);
       setDailyData(loadDailyData());
       setNewAmount("");
-      setSelectedMood('😐');
+      setSelectedMood("😐");
       setIsSpendingOpen(false);
 
       // Check spending against limits
@@ -235,24 +335,54 @@ export default function SpendingCalendar() {
               limit: ${spendingLimits.monthly.toLocaleString()}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsSettingsOpen(true)}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+          <div className="flex space-x-2">
+            {bankAccountName ? (
+              <div>{bankAccountName}</div>
+            ) : (
+              <Button
+                onClick={() => open()}
+                disabled={!ready || isProcessingTransactions}
+              >
+                Connect Bank Account
+              </Button>
+            )}
+            <Button
+              onClick={handleFetchTransactions}
+              disabled={!accessToken || isProcessingTransactions}
+            >
+              {isProcessingTransactions
+                ? "Processing..."
+                : "Fetch Transactions"}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Daily Progress */}
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-sm font-medium">
             <span>Today's Spending</span>
-            <span className={todaySpending > spendingLimits.daily ? "text-destructive" : "text-primary"}>
-              ${todaySpending.toLocaleString()} / ${spendingLimits.daily.toLocaleString()}
+            <span
+              className={
+                todaySpending > spendingLimits.daily
+                  ? "text-destructive"
+                  : "text-primary"
+              }
+            >
+              ${todaySpending.toLocaleString()} / $
+              {spendingLimits.daily.toLocaleString()}
             </span>
           </div>
-          <Progress value={dailyProgress} className={`h-2 ${getProgressBarColor(dailyProgress)}`} />
+          <Progress
+            value={dailyProgress}
+            className={`h-2 ${getProgressBarColor(dailyProgress)}`}
+          />
         </div>
 
         {/* Monthly Progress */}
@@ -394,7 +524,9 @@ export default function SpendingCalendar() {
               />
 
               <div className="space-y-2">
-                <Label className="text-center block">How anxious do you feel about this spending?</Label>
+                <Label className="text-center block">
+                  How anxious do you feel about this spending?
+                </Label>
                 <div className="flex justify-center gap-4">
                   {moodOptions.map(({ emoji, label }) => (
                     <button
@@ -402,8 +534,8 @@ export default function SpendingCalendar() {
                       onClick={() => setSelectedMood(emoji)}
                       className={`p-3 text-2xl rounded-full transition-all ${
                         selectedMood === emoji
-                          ? 'bg-accent scale-110'
-                          : 'hover:bg-accent/50'
+                          ? "bg-accent scale-110"
+                          : "hover:bg-accent/50"
                       }`}
                       title={label}
                     >
