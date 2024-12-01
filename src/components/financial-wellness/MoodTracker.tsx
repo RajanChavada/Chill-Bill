@@ -11,8 +11,8 @@ interface MoodTrackerProps {
 }
 
 const MoodTracker: React.FC<MoodTrackerProps> = ({
-  onMoodSelect = () => {},
-  onJournalSubmit = () => {},
+  onMoodSelect = () => { },
+  onJournalSubmit = () => { },
   selectedMood = "neutral",
 }) => {
   const { user } = useAuth0();

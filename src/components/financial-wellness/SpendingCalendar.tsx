@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ import {
   loadDailyData,
   saveDailyData,
 } from "@/lib/store";
+import { createLinkToken, exchangePublicToken, fetchTransactions } from "@/lib/utils";
+import { usePlaidLink } from "react-plaid-link";
 
 interface DailyData {
   spending: number;
@@ -36,14 +38,68 @@ export default function SpendingCalendar() {
   const [isSpendingOpen, setIsSpendingOpen] = useState(false);
   const [newAmount, setNewAmount] = useState("");
   const [newLimits, setNewLimits] = useState(spendingLimits);
+  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [bankAccountName, setBankAccountName] = useState<string | null>(null);
 
+
+const handleCreateLinkToken = async () => {
+  await createLinkToken();
+};
+
+const handleExchangePublicToken = async (publicToken: string) => {
+  try {
+    const data = await exchangePublicToken(publicToken);
+    setAccessToken(data.access_token);
+    console.log('Access Token:', data.access_token);
+  } catch (error) {
+    console.error('Error exchanging public token:', error);
+  }
+};
+const handleFetchTransactions = async () => {
+  if (accessToken) {
+    const transactions = await fetchTransactions(accessToken);
+    console.log('Transactions:', transactions);
+  } else {
+    console.error('Access token or selected account is not available');
+  }
+};
   // Calculate daily total for today
   const today = format(new Date(), "yyyy-MM-dd");
   const todayData = dailyData[today];
   const todaySpending = todayData?.spending || 0;
   const dailyProgress = (todaySpending / spendingLimits.daily) * 100;
 
+
+  useEffect(() => {
+    const fetchLinkToken = async () => {
+      try {
+        const data = await createLinkToken();
+        setLinkToken(data.link_token);
+      } catch (error) {
+        console.error('Error fetching link token:', error);
+      }
+    };
+    fetchLinkToken();
+  }, []);
+
+  const onSuccess = async (public_token: string, metadata: any) => {
+    try {
+      const data = await exchangePublicToken(public_token);
+      setAccessToken(data.access_token);
+      setBankAccountName(metadata.institution.name);
+      console.log('Access Token:', data.access_token);
+    } catch (error) {
+      console.error('Error exchanging public token:', error);
+    }
+  };
+  
+  const { open, ready } = usePlaidLink({
+    token: linkToken!,
+    onSuccess,
+  });
   // Calculate monthly total
+
   const currentMonthTotal = Object.entries(dailyData)
     .filter(([date]) => date.startsWith(format(new Date(), "yyyy-MM")))
     .reduce((sum, [_, data]) => sum + data.spending, 0);
@@ -98,6 +154,7 @@ export default function SpendingCalendar() {
         <div className="text-lg font-medium">{date.getDate()}</div>
         <div className="text-sm font-medium">${data.spending}</div>
       </div>
+
     );
   };
 
@@ -114,6 +171,14 @@ export default function SpendingCalendar() {
               Daily limit: ${spendingLimits.daily.toLocaleString()} | Monthly
               limit: ${spendingLimits.monthly.toLocaleString()}
             </p>
+          </div>
+          <div className="flex space-x-2 mb-6">
+            {bankAccountName ? (
+              <div>{bankAccountName}</div>
+            ) : (
+              <Button onClick={() => open()} disabled={!ready}>Connect Bank Account</Button>
+            )}
+            <Button onClick={handleFetchTransactions}>Fetch Transactions</Button>
           </div>
           <Button
             variant="outline"
