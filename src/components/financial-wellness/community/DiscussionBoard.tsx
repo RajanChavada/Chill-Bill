@@ -177,7 +177,7 @@ const DiscussionBoard = () => {
     );
 
   return (
-    <Card className="p-6 bg-white shadow-sm">
+    <Card className="p-6 shadow-sm" style={{ background: "#FBFBFB" }}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-lg font-semibold">Community Discussions</h2>
@@ -286,7 +286,15 @@ const DiscussionBoard = () => {
 
         <div className="space-y-4 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-2">
           {filteredPosts.map((post) => (
-            <div key={post.id} className="border rounded-lg p-4 space-y-3 bg-white">
+            <div
+              key={post.id}
+              className="border rounded-lg p-4 space-y-3"
+              style={{
+                background: 'linear-gradient(to right, #D4F6FF, #D4F6FF 100%, #FBFBFB 25%)',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                opacity: 0.9
+              }}
+            >
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-medium">{post.title}</h3>

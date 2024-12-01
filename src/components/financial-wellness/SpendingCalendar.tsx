@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { Settings, DollarSign } from "lucide-react";
+import { Settings, DollarSign, Trophy, CheckCircle } from "lucide-react";
 import {
   loadSpendingLimits,
   saveSpendingLimits,
@@ -36,6 +36,62 @@ const moodOptions = [
   { emoji: '😫', label: 'Very Anxious', anxietyLevel: 9 },
 ] as const;
 
+const aiInsights = [
+  {
+    tip: "Set a weekly budget and stick to it.",
+    isChallenge: false,
+  },
+  {
+    tip: "Use cash for discretionary spending to limit overspending.",
+    isChallenge: true,
+  },
+  {
+    tip: "Track your spending daily to identify patterns.",
+    isChallenge: false,
+  },
+  {
+    tip: "Challenge yourself to skip one unnecessary purchase this week.",
+    isChallenge: true,
+  },
+  {
+    tip: "Consider meal prepping to save on food costs.",
+    isChallenge: false,
+  },
+  {
+    tip: "Use student discounts at local stores like Aritzia and Lululemon.",
+    isChallenge: false,
+  },
+  {
+    tip: "Take advantage of seasonal sales and promotions.",
+    isChallenge: false,
+  },
+  {
+    tip: "Set aside a small amount each week for unexpected expenses.",
+    isChallenge: false,
+  },
+  {
+    tip: "Use budgeting apps to track your spending effectively.",
+    isChallenge: false,
+  },
+  {
+    tip: "Plan your shopping trips to avoid impulse buys.",
+    isChallenge: true,
+  },
+  // Additional challenges
+  {
+    tip: "Try a no-spend day once a week.",
+    isChallenge: true,
+  },
+  {
+    tip: "Save your spare change in a jar.",
+    isChallenge: true,
+  },
+  {
+    tip: "Limit dining out to once a week.",
+    isChallenge: true,
+  },
+];
+
 export default function SpendingCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(),
@@ -48,6 +104,9 @@ export default function SpendingCalendar() {
   const [newAmount, setNewAmount] = useState("");
   const [newLimits, setNewLimits] = useState(spendingLimits);
   const [selectedMood, setSelectedMood] = useState<DailyData['mood']>('😐');
+  const [rewardPoints, setRewardPoints] = useState(0);
+  const [achievementMessage, setAchievementMessage] = useState<string | null>(null);
+  const [aiTip, setAiTip] = useState<string | null>(null);
 
   // Calculate daily total for today
   const today = format(new Date(), "yyyy-MM-dd");
@@ -82,6 +141,18 @@ export default function SpendingCalendar() {
     }
   };
 
+  const fetchRandomTip = async () => {
+    try {
+      const response = await fetch("https://your-ai-worker-url.com/get-tip"); // Replace with your actual endpoint
+      if (!response.ok) throw new Error('Failed to fetch tip');
+      const data = await response.json();
+      setAiTip(data.tip); // Assuming the response contains a 'tip' field
+    } catch (error) {
+      console.error('Error fetching AI tip:', error);
+      setAiTip("Stay mindful of your spending!"); // Fallback tip
+    }
+  };
+
   const handleSaveAmount = () => {
     if (selectedDate && newAmount) {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
@@ -98,6 +169,24 @@ export default function SpendingCalendar() {
       setNewAmount("");
       setSelectedMood('😐');
       setIsSpendingOpen(false);
+
+      // Check spending against limits
+      const todaySpending = data.spending;
+      const dailyLimit = spendingLimits.daily;
+
+      if (todaySpending < dailyLimit) {
+        setAchievementMessage("Great job! You're under budget! 🎉");
+        setRewardPoints(prev => prev + 10); // Reward points for staying under budget
+        setAiTip(null); // Clear AI tip
+      } else if (todaySpending > dailyLimit) {
+        setAchievementMessage("Oops! You've exceeded your budget. 😢");
+        setRewardPoints(prev => prev - 5); // Deduct points for exceeding budget
+        fetchRandomTip(); // Fetch a random tip when exceeding budget
+      } else {
+        setAchievementMessage("You've met your budget! Keep it up! 🏆");
+        setRewardPoints(prev => prev + 5); // Reward points for meeting the budget
+        setAiTip(null); // Clear AI tip
+      }
     }
   };
 
@@ -125,6 +214,11 @@ export default function SpendingCalendar() {
         <div className="text-xl mt-1">{data.mood}</div>
       </div>
     );
+  };
+
+  const handleChallenge = (tip: string) => {
+    // Logic to handle the challenge, e.g., mark it as completed or log it
+    console.log(`Challenge accepted: ${tip}`);
   };
 
   return (
@@ -181,7 +275,35 @@ export default function SpendingCalendar() {
         </div>
       </div>
 
-      {/* Calendar */}
+      {/* Achievement Notification */}
+      {achievementMessage && (
+        <div
+          className={`flex items-center justify-between p-4 rounded-lg mb-4 ${
+            dailyData[format(selectedDate, "yyyy-MM-dd")]?.spending > spendingLimits.daily ? 'bg-red-100 border border-red-300' : 'bg-green-100 border border-green-300'
+          }`}
+        >
+          <div className="flex items-center">
+            {dailyData[format(selectedDate, "yyyy-MM-dd")]?.spending > spendingLimits.daily ? (
+              <span className="h-6 w-6 text-red-500 mr-2">❗</span> // Red exclamation mark when over limit
+            ) : (
+              <span className="h-6 w-6 text-yellow-500 mr-2">🏆</span> // Trophy icon only if within limit
+            )}
+            <span className="text-sm font-medium">{achievementMessage}</span>
+          </div>
+          <span className="text-sm font-medium">Current Amount: ${dailyData[format(selectedDate, "yyyy-MM-dd")]?.spending}</span>
+        </div>
+      )}
+
+      {/* Display AI Tip if available */}
+      {aiTip && (
+        <div className="p-4 bg-red-100 border border-red-300 rounded-lg mb-4">
+          <p className="text-sm text-red-600">{aiTip}</p>
+        </div>
+      )}
+
+      
+
+      {/* Daily Progress and Calendar */}
       <div className="p-6">
         <style>
           {`

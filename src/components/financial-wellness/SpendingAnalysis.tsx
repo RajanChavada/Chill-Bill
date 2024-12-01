@@ -13,6 +13,7 @@ import { Info, Loader2 } from "lucide-react";
 import { loadDailyData } from "@/lib/store";
 import { format, subDays, parseISO, isAfter } from "date-fns";
 import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function SpendingAnalysis() {
   // Load data
@@ -172,94 +173,66 @@ Use breathing exercises before large purchases`;
     }
   }, [hasEnoughData]);
 
+  const aiInsights = [
+    {
+      tip: "Set a weekly budget and stick to it.",
+      isChallenge: false,
+    },
+    {
+      tip: "Use cash for discretionary spending to limit overspending.",
+      isChallenge: true,
+    },
+    {
+      tip: "Track your spending daily to identify patterns.",
+      isChallenge: false,
+    },
+    {
+      tip: "Challenge yourself to skip one unnecessary purchase this week.",
+      isChallenge: true,
+    },
+    {
+      tip: "Consider meal prepping to save on food costs.",
+      isChallenge: false,
+    },
+    {
+      tip: "Use student discounts at local stores like Aritzia and Lululemon.",
+      isChallenge: false,
+    },
+    {
+      tip: "Take advantage of seasonal sales and promotions.",
+      isChallenge: false,
+    },
+    {
+      tip: "Set aside a small amount each week for unexpected expenses.",
+      isChallenge: false,
+    },
+    {
+      tip: "Use budgeting apps to track your spending effectively.",
+      isChallenge: false,
+    },
+    {
+      tip: "Plan your shopping trips to avoid impulse buys.",
+      isChallenge: true,
+    },
+  ];
+
+  const aiSpendingInsights = [
+    "Sundays show highest spending ($100.00)",
+    "Anxiety peaks on Sundays (7.0/10)",
+    "Pause before making impulse purchases on Sundays, considering the high anxiety level.",
+    "Review and adjust your budget on Saturdays to avoid overspending on Sundays.",
+  ];
+
+  // Add this function to handle challenge button clicks
+  const handleChallenge = (tip: string) => {
+    // Implement your challenge logic here
+    console.log(`Challenge accepted: ${tip}`);
+  };
+
   return (
     <Card className="p-6 bg-white shadow-sm w-full">
       <div className="space-y-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-lg font-semibold">Spending & Anxiety Analysis</h2>
-            <p className="text-sm text-muted-foreground">
-              Last 7 days of spending and anxiety levels
-            </p>
-          </div>
-        </div>
-
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis 
-                yAxisId="left" 
-                label={{ value: 'Spending ($)', angle: -90, position: 'insideLeft' }}
-              />
-              <YAxis 
-                yAxisId="right" 
-                orientation="right" 
-                domain={[0, 10]}
-                label={{ value: 'Anxiety Level', angle: 90, position: 'insideRight' }}
-              />
-              <Tooltip 
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-white p-3 shadow-lg rounded-lg border">
-                        <p className="text-sm font-medium">{payload[0].payload.date}</p>
-                        <p className="text-sm">Spending: ${payload[0].value}</p>
-                        <p className="text-sm">Anxiety: {payload[1].value}/10</p>
-                        <p className="text-xl text-center">{payload[0].payload.mood}</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Legend />
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="spending"
-                stroke="#8884d8"
-                name="Spending ($)"
-                strokeWidth={2}
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="anxietyLevel"
-                stroke="#82ca9d"
-                name="Anxiety Level"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-primary/5 rounded-lg p-4 space-y-2">
-          <div className="flex items-center gap-2 text-primary">
-            <Info className="h-4 w-4" />
-            <h3 className="font-medium">Spending Insights</h3>
-          </div>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-4 space-x-2 text-primary">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">Analyzing your spending patterns...</span>
-            </div>
-          ) : (
-            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-              {insights.slice(0, 4).map((insight, index) => (
-                <li key={index} className="transition-all hover:text-primary">
-                  {insight}
-                </li>
-              ))}
-            </ul>
-          )}
-          {apiCallCount.current >= maxApiCalls && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Insights are based on your current data patterns
-            </p>
-          )}
-        </div>
+        {/* Your content here */}
       </div>
     </Card>
   );
