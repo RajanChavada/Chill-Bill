@@ -119,6 +119,8 @@ export default function SpendingCalendar() {
 
   const [bankAccountName, setBankAccountName] = useState<string | null>(null);
 
+  const [aiInsights, setAiInsights] = useState<string[]>([]);
+
   // Calculate daily total for today
   const today = format(new Date(), "yyyy-MM-dd");
   const todayData = dailyData[today];
@@ -326,6 +328,26 @@ export default function SpendingCalendar() {
     console.log(`Challenge accepted: ${tip}`);
   };
 
+  const fetchAiInsights = async () => {
+    try {
+      const response = await fetch("https://your-cloudflare-llm-url.com/get-insights"); // Replace with your actual endpoint
+      if (!response.ok) throw new Error('Failed to fetch insights');
+      const data = await response.text(); // Assuming the response is plain text
+      setAiInsights(data.split('\n')); // Split the text into an array by new lines
+    } catch (error) {
+      console.error('Error fetching AI insights:', error);
+      setAiInsights([
+        "Review your spending habits regularly.",
+        "Consider setting a budget for discretionary spending.",
+        "Look for ways to reduce unnecessary expenses."
+      ]); // Fallback tips
+    }
+  };
+
+  useEffect(() => {
+    fetchAiInsights(); // Fetch insights when the component mounts
+  }, []);
+
   return (
     <Card className="bg-white shadow-lg rounded-xl w-full">
       {/* Header */}
@@ -436,7 +458,15 @@ export default function SpendingCalendar() {
         </div>
       )}
 
-      
+      {/* AI Insights Section */}
+      <div className="p-6">
+        <h3 className="text-lg font-semibold">AI Insights on Spending</h3>
+        <ul className="list-disc pl-5">
+          {aiInsights.map((tip, index) => (
+            <li key={index}>{tip}</li>
+          ))}
+        </ul>
+      </div>
 
       {/* Daily Progress and Calendar */}
       <div className="p-6">
