@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,22 +19,25 @@ import {
   loadDailyData,
   saveDailyData,
 } from "@/lib/store";
-import { createLinkToken, exchangePublicToken, fetchTransactions } from "@/lib/utils";
+import {
+  createLinkToken,
+  exchangePublicToken,
+  fetchTransactions,
+} from "@/lib/utils";
 import { usePlaidLink } from "react-plaid-link";
 
 interface DailyData {
   spending: number;
-  mood: '😊' | '🙂' | '😐' | '😕' | '😫';
+  mood: "😊" | "🙂" | "😐" | "😕" | "😫";
   anxietyLevel: number;
 }
 
-
 const moodOptions = [
-  { emoji: '😊', label: 'Very Calm', anxietyLevel: 1 },
-  { emoji: '🙂', label: 'Relaxed', anxietyLevel: 3 },
-  { emoji: '😐', label: 'Neutral', anxietyLevel: 5 },
-  { emoji: '😕', label: 'Anxious', anxietyLevel: 7 },
-  { emoji: '😫', label: 'Very Anxious', anxietyLevel: 9 },
+  { emoji: "😊", label: "Very Calm", anxietyLevel: 1 },
+  { emoji: "🙂", label: "Relaxed", anxietyLevel: 3 },
+  { emoji: "😐", label: "Neutral", anxietyLevel: 5 },
+  { emoji: "😕", label: "Anxious", anxietyLevel: 7 },
+  { emoji: "😫", label: "Very Anxious", anxietyLevel: 9 },
 ] as const;
 
 export default function SpendingCalendar() {
@@ -51,29 +54,9 @@ export default function SpendingCalendar() {
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [bankAccountName, setBankAccountName] = useState<string | null>(null);
-
-
-const handleCreateLinkToken = async () => {
-  await createLinkToken();
-};
-
-const handleExchangePublicToken = async (publicToken: string) => {
-  try {
-    const data = await exchangePublicToken(publicToken);
-    setAccessToken(data.access_token);
-    console.log('Access Token:', data.access_token);
-  } catch (error) {
-    console.error('Error exchanging public token:', error);
-  }
-};
-const handleFetchTransactions = async () => {
-  if (accessToken) {
-    const transactions = await fetchTransactions(accessToken);
-    console.log('Transactions:', transactions);
-  } else {
-    console.error('Access token or selected account is not available');
-  }
-};  const [selectedMood, setSelectedMood] = useState<DailyData['mood']>('😐');
+  const [isProcessingTransactions, setIsProcessingTransactions] =
+    useState(false);
+  const [selectedMood, setSelectedMood] = useState<DailyData["mood"]>("😐");
 
   // Calculate daily total for today
   const today = format(new Date(), "yyyy-MM-dd");
@@ -81,6 +64,76 @@ const handleFetchTransactions = async () => {
   const todaySpending = todayData?.spending || 0;
   const dailyProgress = (todaySpending / spendingLimits.daily) * 100;
 
+  // Calculate monthly total
+  const currentMonthTotal = Object.entries(dailyData)
+    .filter(([date]) => date.startsWith(format(new Date(), "yyyy-MM")))
+    .reduce((sum, [_, data]) => sum + data.spending, 0);
+
+  const monthlyProgress = (currentMonthTotal / spendingLimits.monthly) * 100;
+
+  const handleCreateLinkToken = async () => {
+    await createLinkToken();
+  };
+
+  const handleExchangePublicToken = async (publicToken: string) => {
+    try {
+      const data = await exchangePublicToken(publicToken);
+      setAccessToken(data.access_token);
+      console.log("Access Token:", data.access_token);
+    } catch (error) {
+      console.error("Error exchanging public token:", error);
+    }
+  };
+
+  const handleFetchTransactions = async () => {
+    if (accessToken) {
+      try {
+        setIsProcessingTransactions(true);
+        console.log("Fetching transactions...");
+        const transactionData = await fetchTransactions(accessToken);
+        console.log("Received transaction data:", transactionData);
+
+        // Get existing data
+        const existingData = { ...loadDailyData() };
+        console.log("Existing data:", existingData);
+
+        // Process transactions and merge with existing data
+        if (transactionData?.transactions) {
+          transactionData.transactions.forEach((transaction) => {
+            console.log("Processing transaction:", transaction);
+            const date = transaction.authorized_date;
+            if (date) {
+              if (!existingData[date]) {
+                existingData[date] = {
+                  spending: 0,
+                  mood: "😐",
+                  anxietyLevel: 5,
+                };
+              }
+              // Add to the spending amount for that date
+              existingData[date].spending += Math.abs(transaction.amount);
+              console.log(`Updated data for ${date}:`, existingData[date]);
+            }
+          });
+
+          // Save merged data and refresh calendar
+          console.log("Final data to save:", existingData);
+          Object.entries(existingData).forEach(([date, data]) => {
+            saveDailyData(date, data);
+          });
+          setDailyData(existingData);
+        } else {
+          console.error("No transactions found in response");
+        }
+      } catch (error) {
+        console.error("Error processing transactions:", error);
+      } finally {
+        setIsProcessingTransactions(false);
+      }
+    } else {
+      console.error("Access token or selected account is not available");
+    }
+  };
 
   useEffect(() => {
     const fetchLinkToken = async () => {
@@ -88,7 +141,7 @@ const handleFetchTransactions = async () => {
         const data = await createLinkToken();
         setLinkToken(data.link_token);
       } catch (error) {
-        console.error('Error fetching link token:', error);
+        console.error("Error fetching link token:", error);
       }
     };
     fetchLinkToken();
@@ -99,28 +152,21 @@ const handleFetchTransactions = async () => {
       const data = await exchangePublicToken(public_token);
       setAccessToken(data.access_token);
       setBankAccountName(metadata.institution.name);
-      console.log('Access Token:', data.access_token);
+      console.log("Access Token:", data.access_token);
     } catch (error) {
-      console.error('Error exchanging public token:', error);
+      console.error("Error exchanging public token:", error);
     }
   };
-  
+
   const { open, ready } = usePlaidLink({
     token: linkToken!,
     onSuccess,
   });
-  // Calculate monthly total
-
-  const currentMonthTotal = Object.entries(dailyData)
-    .filter(([date]) => date.startsWith(format(new Date(), "yyyy-MM")))
-    .reduce((sum, [_, data]) => sum + data.spending, 0);
-
-  const monthlyProgress = (currentMonthTotal / spendingLimits.monthly) * 100;
 
   const getProgressBarColor = (progress: number) => {
-    if (progress < 50) return "bg-green-500"; // Green for less than 50%
-    if (progress < 100) return "bg-yellow-500"; // Yellow for 50% to 99%
-    return "bg-red-500"; // Red for 100% and above
+    if (progress < 50) return "bg-green-500";
+    if (progress < 100) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -140,18 +186,20 @@ const handleFetchTransactions = async () => {
   const handleSaveAmount = () => {
     if (selectedDate && newAmount) {
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
-      const selectedMoodData = moodOptions.find(m => m.emoji === selectedMood)!;
-      
+      const selectedMoodData = moodOptions.find(
+        (m) => m.emoji === selectedMood,
+      )!;
+
       const data: DailyData = {
         spending: Number(newAmount),
         mood: selectedMood,
-        anxietyLevel: selectedMoodData.anxietyLevel
+        anxietyLevel: selectedMoodData.anxietyLevel,
       };
-      
+
       saveDailyData(formattedDate, data);
       setDailyData(loadDailyData());
       setNewAmount("");
-      setSelectedMood('😐');
+      setSelectedMood("😐");
       setIsSpendingOpen(false);
     }
   };
@@ -179,7 +227,6 @@ const handleFetchTransactions = async () => {
         <div className="text-sm font-medium">${data.spending}</div>
         <div className="text-xl mt-1">{data.mood}</div>
       </div>
-
     );
   };
 
@@ -197,32 +244,54 @@ const handleFetchTransactions = async () => {
               limit: ${spendingLimits.monthly.toLocaleString()}
             </p>
           </div>
-          <div className="flex space-x-2 mb-6">
+          <div className="flex space-x-2">
             {bankAccountName ? (
               <div>{bankAccountName}</div>
             ) : (
-              <Button onClick={() => open()} disabled={!ready}>Connect Bank Account</Button>
+              <Button
+                onClick={() => open()}
+                disabled={!ready || isProcessingTransactions}
+              >
+                Connect Bank Account
+              </Button>
             )}
-            <Button onClick={handleFetchTransactions}>Fetch Transactions</Button>
+            <Button
+              onClick={handleFetchTransactions}
+              disabled={!accessToken || isProcessingTransactions}
+            >
+              {isProcessingTransactions
+                ? "Processing..."
+                : "Fetch Transactions"}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsSettingsOpen(true)}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
         </div>
 
         {/* Daily Progress */}
         <div className="space-y-3 mb-6">
           <div className="flex justify-between text-sm font-medium">
             <span>Today's Spending</span>
-            <span className={todaySpending > spendingLimits.daily ? "text-destructive" : "text-primary"}>
-              ${todaySpending.toLocaleString()} / ${spendingLimits.daily.toLocaleString()}
+            <span
+              className={
+                todaySpending > spendingLimits.daily
+                  ? "text-destructive"
+                  : "text-primary"
+              }
+            >
+              ${todaySpending.toLocaleString()} / $
+              {spendingLimits.daily.toLocaleString()}
             </span>
           </div>
-          <Progress value={dailyProgress} className={`h-2 ${getProgressBarColor(dailyProgress)}`} />
+          <Progress
+            value={dailyProgress}
+            className={`h-2 ${getProgressBarColor(dailyProgress)}`}
+          />
         </div>
 
         {/* Monthly Progress */}
@@ -336,7 +405,9 @@ const handleFetchTransactions = async () => {
               />
 
               <div className="space-y-2">
-                <Label className="text-center block">How anxious do you feel about this spending?</Label>
+                <Label className="text-center block">
+                  How anxious do you feel about this spending?
+                </Label>
                 <div className="flex justify-center gap-4">
                   {moodOptions.map(({ emoji, label }) => (
                     <button
@@ -344,8 +415,8 @@ const handleFetchTransactions = async () => {
                       onClick={() => setSelectedMood(emoji)}
                       className={`p-3 text-2xl rounded-full transition-all ${
                         selectedMood === emoji
-                          ? 'bg-accent scale-110'
-                          : 'hover:bg-accent/50'
+                          ? "bg-accent scale-110"
+                          : "hover:bg-accent/50"
                       }`}
                       title={label}
                     >
